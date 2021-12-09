@@ -1,0 +1,1 @@
+More casual approch this year, no boilerplate or templates just solving the puzzles for fun :)
