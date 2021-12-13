@@ -1,2 +1,2 @@
-﻿var day = new Day11();
+﻿var day = new Day12();
 Console.WriteLine(day.RunB());
