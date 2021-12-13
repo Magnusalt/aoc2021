@@ -64,6 +64,16 @@ class Day12
                 paths.Add(node.Item3 + "," + "end");
                 continue;
             }
+            if (node.Item3.Contains(node.Item1.ToLower()))
+            {
+                if (node.Item3
+                    .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                    .Where(c => c == c.ToLower())
+                    .GroupBy(c => c).Any(g => g.Count() > 1))
+                {
+                    continue;
+                }
+            }
 
             foreach (var item in node.Item2.Where(n => n != "start"))
             {
@@ -82,8 +92,7 @@ class Day12
                     if (node.Item3
                     .Split(',', StringSplitOptions.RemoveEmptyEntries)
                     .Where(c => c == c.ToLower())
-                    .GroupBy(c => c)
-                    .Select(g => g.Count()).All(g => g == 1))
+                    .GroupBy(c => c).All(g => g.Count() == 1))
                     {
                         stack.Enqueue((item, _nodes[item], node.Item3 + "," + node.Item1));
                         continue;
@@ -92,16 +101,6 @@ class Day12
             }
         }
 
-        var countValid = 0;
-        foreach (var item in paths)
-        {
-            var groupedSizes = item.Split(',', StringSplitOptions.RemoveEmptyEntries).Where(c => c == c.ToLower()).GroupBy(c => c).Select(g => g.Count());
-            if (groupedSizes.Count(s => s > 1) <= 1)
-            {
-                countValid++;
-            }
-        }
-
-        return countValid;
+        return paths.Count;
     }
 }
