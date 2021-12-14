@@ -3,17 +3,18 @@ using System.Text;
 class Day14
 {
     private string _starting;
-    private Dictionary<string, List<string>> _insertRules;
+    private IEnumerable<string[]> _insertRules;
 
     public Day14()
     {
         var input = File.ReadAllLines("input14.txt");
         _starting = input.First();
-        _insertRules = input.Skip(2).Select(r => r.Split("->", StringSplitOptions.TrimEntries)).ToDictionary(r => r[0], r => new List<string> { $"{r[0][0]}{r[1]}", $"{r[1]}{r[0][1]}" });
+        _insertRules = input.Skip(2).Select(r => r.Split("->", StringSplitOptions.TrimEntries));
     }
 
     public long Run()
     {
+        var rules = _insertRules.ToDictionary(r => r[0], r => r[1]);
         var current = _starting;
         for (int _ = 0; _ < 10; _++)
         {
@@ -23,7 +24,7 @@ class Day14
             while (index < current.Length - 1)
             {
                 var pair = current.Substring(index, 2);
-                if (_insertRules.TryGetValue(pair, out var insert))
+                if (rules.TryGetValue(pair, out var insert))
                 {
                     sb.Append(pair[0]);
                     sb.Append(insert);
@@ -42,6 +43,8 @@ class Day14
     }
     public long RunB()
     {
+        var pairProduct = _insertRules.ToDictionary(r => r[0], r => new List<string> { $"{r[0][0]}{r[1]}", $"{r[1]}{r[0][1]}" });
+
         var pairCounts = new Dictionary<string, long>();
 
         for (int i = 0; i < _starting.Length - 1; i++)
@@ -57,14 +60,12 @@ class Day14
             }
         }
 
-
-
         for (int _ = 0; _ < 40; _++)
         {
             var nextCounts = new Dictionary<string, long>();
             foreach (var pair in pairCounts)
             {
-                foreach (var item in _insertRules[pair.Key])
+                foreach (var item in pairProduct[pair.Key])
                 {
                     if (nextCounts.ContainsKey(item))
                     {
