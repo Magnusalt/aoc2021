@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 class Day17
 {
     private (int, int) _targetX = (79, 137);
@@ -78,7 +80,7 @@ class Day17
                 var veloX = x;
                 var veloY = y;
                 var trajectory = new List<(int, int)>();
-                while (time < 2 * Math.Abs(_targetY.Item1) + 1)
+                while (time < 2 * Math.Abs(_targetY.Item1) + 1 && (posX < maxX || posY < maxY))
                 {
                     if (trajectory.Any(p => IsInTargetAreaX(p.Item1) && IsInTargetAreaY(p.Item2)))
                     {
