@@ -1,2 +1,2 @@
-﻿var day = new Day20();
-Console.WriteLine(day.Run());
+﻿var day = new Day21();
+Console.WriteLine(day.RunB());
