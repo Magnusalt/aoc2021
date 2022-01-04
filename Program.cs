@@ -1,3 +1,3 @@
-﻿var day = new Day23();
+﻿var day = new Day24();
 Console.WriteLine("Running");
-Console.WriteLine(day.RunB());
+Console.WriteLine(day.Run());
