@@ -29,21 +29,45 @@ class Day19
         }
     }
 
-    public long Run()
+    public (long, long) Run()
     {
 
+        var queue = new Queue<Scanner>();
+        var dialedIn = new HashSet<Scanner>();
 
+        queue.Enqueue(_scanners[0]);
+        dialedIn.Add(_scanners[0]);
 
+        while (dialedIn.Count < _scanners.Count)
+        {
+            var currentReference = queue.Dequeue();
 
+            foreach (var item in _scanners.Except(dialedIn))
+            {
+                if (currentReference.Name == item.Name)
+                {
+                    continue;
+                }
+                var success = DialIn(currentReference, item);
+                if (success)
+                {
+                    dialedIn.Add(item);
+                    queue.Enqueue(item);
+                }
+            }
+        }
 
+        var unique = dialedIn.SelectMany(d => d.Detections).Distinct().Count();
 
-        return 0;
+        var apart = dialedIn.DifferentCombinations(2).Select(d => Vector3.Subtract(d.First().Position, d.Last().Position)).Select(p => (long)(Math.Abs(p.X) + Math.Abs(p.Y) + Math.Abs(p.Z)));
+
+        return (unique, apart.Max());
     }
 
-    private void Overlaps(Scanner scanner1, Scanner scanner2)
+    private bool DialIn(Scanner reference, Scanner relative)
     {
-        var combinations0 = scanner1.Detections.DifferentCombinations(2).Select(c => (c.First(), c.Last()));
-        var combinations1 = scanner2.Detections.DifferentCombinations(2).Select(c => (c.First(), c.Last()));
+        var combinations0 = reference.Detections.DifferentCombinations(2).Select(c => (c.First(), c.Last()));
+        var combinations1 = relative.Detections.DifferentCombinations(2).Select(c => (c.First(), c.Last()));
 
         var lengths0 = combinations0.Select(c => (Start: c.Item1, End: c.Item2, Distance: Vector3.Distance(c.Item1, c.Item2)));
         var lengths1 = combinations1.Select(c => (Start: c.Item1, End: c.Item2, Distance: Vector3.Distance(c.Item1, c.Item2)));
@@ -52,7 +76,7 @@ class Day19
 
         if (common.Count() < 66)
         {
-            return;
+            return false;
         }
 
         var mappings = new Dictionary<Vector3, List<Vector3>>();
@@ -85,21 +109,57 @@ class Day19
         {
             finalMapping[key] = mappings[key].GroupBy(v => v).Select(g => (g.Key, g.Count())).OrderByDescending(t => t.Item2).Select(t => t.Key).First();
         }
-        
+
         var diffs = finalMapping.Select((kv) => Vector3.Subtract(kv.Key, kv.Value));
 
-        var rotateY = Matrix4x4.CreateRotationY((float)Math.PI);
 
-        for (int i = 0; i < 3; i++)
+
+        var rotateX = Matrix4x4.CreateRotationX((float)Math.PI / 2);
+        var rotateY = Matrix4x4.CreateRotationY((float)Math.PI / 2);
+        var rotateZ = Matrix4x4.CreateRotationZ((float)Math.PI / 2);
+
+        var allEqual = new HashSet<Vector3>(diffs).Count == 1;
+
+        var currentRotation = rotateX;
+        var allReadings = relative.Detections;
+        while (!allEqual)
         {
             finalMapping = finalMapping.ToDictionary(kv => kv.Key, (kv) =>
             {
-                var transformed = Vector3.Transform(kv.Value, rotateY);
+                var transformed = Vector3.Transform(kv.Value, currentRotation);
                 return new Vector3((float)Math.Round(transformed.X, 0), (float)Math.Round(transformed.Y, 0), (float)Math.Round(transformed.Z, 0));
             });
-            var diffsAfterRotate = finalMapping.Select((kv) => Vector3.Subtract(kv.Key, kv.Value));
-            var allEqual = new HashSet<Vector3>(diffsAfterRotate).Count == 1;
+            diffs = finalMapping.Select((kv) => Vector3.Subtract(kv.Key, kv.Value));
+
+            allReadings = allReadings.Select((d) =>
+            {
+                var transformed = Vector3.Transform(d, currentRotation);
+                return new Vector3((float)Math.Round(transformed.X, 0), (float)Math.Round(transformed.Y, 0), (float)Math.Round(transformed.Z, 0));
+            }).ToList();
+
+
+            allEqual = new HashSet<Vector3>(diffs).Count == 1;
+            if (allEqual)
+            {
+                relative.Detections = allReadings.Select(d => Vector3.Add(d, diffs.First())).ToList();
+                relative.Position = diffs.First();
+                return true;
+            }
+            var firstDiff = diffs.First();
+            if (diffs.All(v => v.X == firstDiff.X))
+            {
+                currentRotation = rotateX;
+            }
+            if (diffs.All(v => v.Y == firstDiff.Y))
+            {
+                currentRotation = rotateY;
+            }
+            if (diffs.All(v => v.Z == firstDiff.Z))
+            {
+                currentRotation = rotateZ;
+            }
         }
+        return false;
     }
 
 }
